@@ -11,7 +11,7 @@ Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
 
 // Выход
-Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum'); // маршрут для выхода
+Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
 
 Route::middleware('auth:sanctum')->get('/client', function (Request $request) {
     return response()->json($request->user());

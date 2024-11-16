@@ -13,7 +13,6 @@ class CreateClientsTable extends Migration
             $table->string('full_name');
             $table->string('password');
             $table->string('email')->unique();
-            $table->string('token')->nullable()->unique();
             $table->string('login')->unique();
             $table->date('birth');
             $table->string('telephone', 20)->nullable();

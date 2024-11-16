@@ -38,12 +38,17 @@ class AuthController extends Controller
             'telephone' => $request->telephone,
         ]);
 
-        // Возвращаем успешное сообщение с данными клиента
+        // Генерация токена для нового клиента
+        $token = $client->createToken('YourAppName')->plainTextToken;
+
+        // Возвращаем успешное сообщение с данными клиента и токеном
         return response()->json([
             'message' => 'Клиент успешно зарегистрирован!', // Сообщение об успешной регистрации
-            'client' => $client
+            'client' => $client,  // Данные клиента
+            'token' => $token // Возвращаем токен
         ]);
     }
+
 
     // Логин (вход) клиента
     public function login(Request $request)
@@ -67,16 +72,18 @@ class AuthController extends Controller
             return response()->json(['message' => 'Неавторизованный доступ'], 401);
         }
 
-        // Генерация токена для авторизации с помощью Sanctum
+        // Генерация нового токена для авторизации с помощью Sanctum
+        // Можно передавать название токена, например, 'AppName' или использовать что-то более индивидуальное
         $token = $client->createToken('YourAppName')->plainTextToken;
 
-        // Возвращаем успешный ответ с данными клиента и токеном
+        // Возвращаем успешный ответ с данными клиента и новым токеном
         return response()->json([
             'message' => 'Авторизация успешна', // Сообщение об успешной авторизации
-            'client' => $client,
-            'token' => $token // Токен для авторизации
+            'client' => $client, // Данные клиента
+            'token' => $token // Новый токен для авторизации
         ]);
     }
+
 
     // Метод для выхода из системы (удаление всех токенов клиента)
     public function logout(Request $request)

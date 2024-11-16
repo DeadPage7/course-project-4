@@ -12,7 +12,7 @@ class Client extends Model
     use HasFactory, HasApiTokens;
 
     protected $fillable = [
-        'full_name', 'password', 'email', 'token', 'login', 'birth', 'telephone'
+        'full_name', 'password', 'email', 'login', 'birth', 'telephone'
     ];
 
     public function addresses()
