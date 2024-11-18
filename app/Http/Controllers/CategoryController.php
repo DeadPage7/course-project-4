@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\ModelNotFoundException; // Для обработки исключений
 
@@ -12,7 +12,23 @@ class CategoryController extends Controller
     {
         return response()->json(Category::all()); // Возвращаем все категории
     }
+    // Получение товаров по категории
+    public function products($id)
+    {
+        try {
+            // Находим категорию по ID
+            $category = Category::findOrFail($id);
 
+            // Получаем товары, связанные с категорией
+            $products = $category->products;
+
+            // Возвращаем товары
+            return response()->json($products);
+        } catch (ModelNotFoundException $e) {
+            // Если категория не найдена, возвращаем ошибку
+            return response()->json(['message' => 'Категория не найдена.'], 404);
+        }
+    }
     // Создание новой категории
     public function store(Request $request)
     {
