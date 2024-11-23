@@ -11,7 +11,7 @@ class CreateCartsTable extends Migration
         Schema::create('carts', function (Blueprint $table) {
             $table->id();
             $table->foreignId('client_id')->constrained('clients');
-            $table->decimal('total_cost', 10, 2);
+            $table->decimal('total_cost', 10, 2)->default(0);  // Изначально стоимость корзины 0
             $table->timestamps();
         });
     }

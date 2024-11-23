@@ -12,45 +12,38 @@ Route::post('register', [AuthController::class, 'register']);
 
 // Вход
 Route::post('login', [AuthController::class, 'login']);
+
 // Выход
 Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
 
-Route::get('client/{id}', [ClientController::class, 'show']);
+// Получение всех товаров
+Route::get('/product', [ProductController::class, 'index']);
 
-Route::middleware('auth:sanctum')->get('/client', function (Request $request) {
-    return response()->json($request->user());
-});
-// Получить все товары
-Route::get('/product', [ProductController::class, 'index']); // Получить все товары
-// Получить товар по ID
-Route::get('/product/{id}', [ProductController::class, 'show']); // Получить товар по ID
+// Получение товара по ID
+Route::get('/product/{id}', [ProductController::class, 'show']);
+
 // Получение товаров по категории
-Route::get('/categories', [CategoryController::class, 'index']); // Получить все категории
-
+Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/category/{id}/products', [CategoryController::class, 'products']);
 
-Route::middleware('auth:sanctum')->get('/profile', function (Request $request) {
-    return response()->json($request->user());
-});
-// Получение данных профиля
+// Доступ к профилю
 Route::middleware('auth:sanctum')->get('profile', [ClientController::class, 'profile']);
-
-// Обновление данных профиля
 Route::middleware('auth:sanctum')->put('profile', [ClientController::class, 'update']);
 
+// Корзина
 Route::middleware('auth:sanctum')->group(function () {
-    // Получить корзину клиента
-    Route::get('/cart', [CartController::class, 'index']);
+    // Получить корзину пользователя
+    Route::get('/cart', [CartController::class, 'show']);
 
-    // Создание корзины
-    Route::post('/cart', [CartController::class, 'store']);
+    // Добавить товар в корзину
+    Route::post('/cart/product/{productId}', [CartController::class, 'addProduct']);
 
-    // Обновление корзины
-    Route::put('/cart/{id}', [CartController::class, 'update']);
+    // Обновить количество товара в корзине
+    Route::put('/cart/product/{productId}', [CartController::class, 'updateProduct']);
 
-    // Добавление товара в корзину
-    Route::post('/cart/{cartId}/product', [CartController::class, 'addProduct']);
+    // Удалить товар из корзины
+    Route::delete('/cart/product/{productId}', [CartController::class, 'removeProduct']);
 
-    // Удаление товара из корзины
-    Route::delete('/cart/{cartId}/product/{productId}', [CartController::class, 'removeProduct']);
+    // Обновить корзину (например, пересчитать стоимость)
+    Route::put('/cart', [CartController::class, 'update']);
 });
