@@ -1,16 +1,15 @@
 <?php
 
 namespace Database\Seeders;
+
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Client;
-
 
 class ClientSeeder extends Seeder
 {
     public function run()
     {
-        // Создание тестового клиента
         Client::create([
             'full_name' => 'Иван Иванов',
             'email' => 'ivanov@example.ru',
@@ -27,6 +26,25 @@ class ClientSeeder extends Seeder
             'login' => 'maria_smirnova',
             'birth' => '1990-08-25',
             'telephone' => '+7 905 876 54 32',
+        ]);
+
+        // Добавляем еще несколько клиентов
+        Client::create([
+            'full_name' => 'Алексей Петров',
+            'email' => 'alexey@example.ru',
+            'password' => Hash::make('password123'),
+            'login' => 'alexey_petrov',
+            'birth' => '1995-02-20',
+            'telephone' => '+7 903 543 21 65',
+        ]);
+
+        Client::create([
+            'full_name' => 'Елена Кузнецова',
+            'email' => 'elena@example.ru',
+            'password' => Hash::make('password123'),
+            'login' => 'elena_kuznetsova',
+            'birth' => '1980-12-10',
+            'telephone' => '+7 906 123 45 67',
         ]);
     }
 }

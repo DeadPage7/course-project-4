@@ -11,14 +11,18 @@ class OrderSeeder extends Seeder
 {
     public function run()
     {
-        $client = Client::first(); // Получаем первого клиента
-        $address = Address::first(); // Получаем первый адрес
+        $clients = Client::all();
+        $addresses = Address::all();
 
-        Order::create([
-            'client_id' => $client->id,
-            'address_id' => $address->id,
-            'order_date' => now(),
-            'total_cost' => 1650.00, // Стоимость заказа в рублях
-        ]);
+        foreach ($clients as $client) {
+            foreach ($addresses as $address) {
+                Order::create([
+                    'client_id' => $client->id,
+                    'address_id' => $address->id,
+                    'order_date' => now(),
+                    'total_cost' => rand(1000, 5000),
+                ]);
+            }
+        }
     }
 }

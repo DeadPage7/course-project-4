@@ -11,10 +11,11 @@ class DatabaseSeeder extends Seeder
     {
         // Вызов сидеров
         $this->call([
+            CategorySeeder::class,
+            ProductSeeder::class,
             ClientSeeder::class,
             AddressSeeder::class,
             CartSeeder::class,
-            ProductSeeder::class,
             OrderSeeder::class,
             OrderItemSeeder::class,
         ]);

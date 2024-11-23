@@ -101,4 +101,5 @@ class CategoryController extends Controller
             return response()->json(['message' => 'Категория для удаления не найдена.'], 404);
         }
     }
+
 }
