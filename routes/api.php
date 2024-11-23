@@ -5,6 +5,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CartController;
 
 // Регистрация
 Route::post('register', [AuthController::class, 'register']);
@@ -36,3 +37,20 @@ Route::middleware('auth:sanctum')->get('profile', [ClientController::class, 'pro
 
 // Обновление данных профиля
 Route::middleware('auth:sanctum')->put('profile', [ClientController::class, 'update']);
+
+Route::middleware('auth:sanctum')->group(function () {
+    // Получить корзину клиента
+    Route::get('/cart', [CartController::class, 'index']);
+
+    // Создание корзины
+    Route::post('/cart', [CartController::class, 'store']);
+
+    // Обновление корзины
+    Route::put('/cart/{id}', [CartController::class, 'update']);
+
+    // Добавление товара в корзину
+    Route::post('/cart/{cartId}/product', [CartController::class, 'addProduct']);
+
+    // Удаление товара из корзины
+    Route::delete('/cart/{cartId}/product/{productId}', [CartController::class, 'removeProduct']);
+});
