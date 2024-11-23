@@ -31,3 +31,8 @@ Route::get('/category/{id}/products', [CategoryController::class, 'products']);
 Route::middleware('auth:sanctum')->get('/profile', function (Request $request) {
     return response()->json($request->user());
 });
+// Получение данных профиля
+Route::middleware('auth:sanctum')->get('profile', [ClientController::class, 'profile']);
+
+// Обновление данных профиля
+Route::middleware('auth:sanctum')->put('profile', [ClientController::class, 'update']);

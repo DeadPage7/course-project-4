@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Client;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
+
 
 class ClientController extends Controller
 {
@@ -12,7 +15,10 @@ class ClientController extends Controller
     {
         return response()->json(Client::all()); // Возвращаем всех клиентов
     }
-
+    public function profile(Request $request)
+    {
+        return response()->json($request->user());
+    }
     // Создание нового клиента
     public function store(Request $request)
     {
@@ -54,37 +60,50 @@ class ClientController extends Controller
     }
 
     // Обновление данных клиента
-    public function update(Request $request, $id)
+    public function update(Request $request)
     {
-        // Валидация данных для обновления клиента с кастомными сообщениями
-        $request->validate([
-            'full_name' => 'required|string|max:255', // Полное имя клиента
-            'email' => 'required|email|unique:clients,email,' . $id . '|max:255', // Электронная почта
-            'password' => 'nullable|string|min:8', // Пароль клиента
-            'token' => 'nullable|string|max:255|unique:clients,token,' . $id, // Токен клиента
-            'login' => 'required|string|max:255|unique:clients,login,' . $id, // Логин клиента
-            'birth' => 'required|date', // Дата рождения
-            'telephone' => 'nullable|string|max:20', // Телефон
-        ], [
-            'full_name.required' => 'Поле "Полное имя" обязательно для обновления.',
-            'email.required' => 'Поле "Электронная почта" обязательно для обновления.',
-            'email.email' => 'Поле "Электронная почта" должно быть валидным адресом электронной почты.',
-            'email.unique' => 'Электронная почта уже используется другим клиентом.',
-            'password.min' => 'Поле "Пароль" должно содержать хотя бы 8 символов.',
-            'token.unique' => 'Токен уже используется.',
-            'login.required' => 'Поле "Логин" обязательно для обновления.',
-            'login.unique' => 'Логин уже используется другим клиентом.',
-            'birth.required' => 'Поле "Дата рождения" обязательно для обновления.',
-            'telephone.max' => 'Поле "Телефон" не может быть длиннее 20 символов.',
+        // Валидация входных данных
+        $validator = Validator::make($request->all(), [
+            'full_name' => 'nullable|string|max:255',
+            'email' => 'nullable|email|unique:clients,email,' . $request->user()->id,
+            'password' => 'nullable|string|min:8|confirmed',
+            'login' => 'nullable|string|max:255|unique:clients,login,' . $request->user()->id,
+            'birth' => 'nullable|date',
+            'telephone' => 'nullable|string|max:255',
         ]);
 
-        // Находим клиента по id
-        $client = Client::findOrFail($id);
+        // Если валидация не прошла, возвращаем ошибку
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 400);
+        }
 
-        // Обновляем данные клиента
-        $client->update($request->all());
+        // Получаем текущего аутентифицированного клиента
+        $client = $request->user();
 
-        // Возвращаем обновленного клиента
+        // Обновляем данные клиента, только если они были переданы в запросе
+        if ($request->has('full_name')) {
+            $client->full_name = $request->full_name;
+        }
+        if ($request->has('email')) {
+            $client->email = $request->email;
+        }
+        if ($request->has('password')) {
+            $client->password = Hash::make($request->password); // Хешируем новый пароль
+        }
+        if ($request->has('login')) {
+            $client->login = $request->login;
+        }
+        if ($request->has('birth')) {
+            $client->birth = $request->birth;
+        }
+        if ($request->has('telephone')) {
+            $client->telephone = $request->telephone;
+        }
+
+        // Сохраняем обновленные данные в базе
+        $client->save();
+
+        // Возвращаем успешный ответ с обновленными данными
         return response()->json($client);
     }
 

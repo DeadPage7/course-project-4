@@ -6,7 +6,6 @@ use App\Models\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
@@ -43,12 +42,11 @@ class AuthController extends Controller
 
         // Возвращаем успешное сообщение с данными клиента и токеном
         return response()->json([
-            'message' => 'Клиент успешно зарегистрирован!', // Сообщение об успешной регистрации
-            'client' => $client,  // Данные клиента
-            'token' => $token // Возвращаем токен
+            'message' => 'Клиент успешно зарегистрирован!',
+            'client' => $client,
+            'token' => $token
         ]);
     }
-
 
     // Логин (вход) клиента
     public function login(Request $request)
@@ -67,23 +65,21 @@ class AuthController extends Controller
         // Поиск клиента по логину
         $client = Client::where('login', $request->login)->first();
 
-        // Если клиент не найден или пароль неверный, возвращаем ошибку 401 (Unauthorized)
+        // Если клиент не найден или пароль неверный, возвращаем ошибку 401
         if (!$client || !Hash::check($request->password, $client->password)) {
             return response()->json(['message' => 'Неавторизованный доступ'], 401);
         }
 
         // Генерация нового токена для авторизации с помощью Sanctum
-        // Можно передавать название токена, например, 'AppName' или использовать что-то более индивидуальное
         $token = $client->createToken('YourAppName')->plainTextToken;
 
         // Возвращаем успешный ответ с данными клиента и новым токеном
         return response()->json([
-            'message' => 'Авторизация успешна', // Сообщение об успешной авторизации
-            'client' => $client, // Данные клиента
-            'token' => $token // Новый токен для авторизации
+            'message' => 'Авторизация успешна',
+            'client' => $client,
+            'token' => $token
         ]);
     }
-
 
     // Метод для выхода из системы (удаление всех токенов клиента)
     public function logout(Request $request)
