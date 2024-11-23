@@ -24,7 +24,10 @@ Route::get('/product', [ProductController::class, 'index']); // Получить
 // Получить товар по ID
 Route::get('/product/{id}', [ProductController::class, 'show']); // Получить товар по ID
 // Получение товаров по категории
+Route::get('/categories', [CategoryController::class, 'index']); // Получить все категории
+
 Route::get('/category/{id}/products', [CategoryController::class, 'products']);
 
-Route::get('/categories', [CategoryController::class, 'index']);
-
+Route::middleware('auth:sanctum')->get('/profile', function (Request $request) {
+    return response()->json($request->user());
+});

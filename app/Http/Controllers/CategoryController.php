@@ -16,19 +16,13 @@ class CategoryController extends Controller
     public function products($id)
     {
         try {
-            // Находим категорию по ID
-            $category = Category::findOrFail($id);
-
-            // Получаем товары, связанные с категорией
-            $products = $category->products;
-
-            // Возвращаем товары
-            return response()->json($products);
+            $category = Category::with('products')->findOrFail($id); // Заранее загружаем товары
+            return response()->json($category->products); // Возвращаем только товары
         } catch (ModelNotFoundException $e) {
-            // Если категория не найдена, возвращаем ошибку
-            return response()->json(['message' => 'Категория не найдена.'], 404);
+            return response()->json(['message' => 'Категория не найдена.'], 404); // Если категории нет
         }
     }
+
     // Создание новой категории
     public function store(Request $request)
     {
