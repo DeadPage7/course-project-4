@@ -3,13 +3,12 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Cart;
+use App\Models\CartProduct;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class CartController extends Controller
 {
-    // Получение корзины клиента (единственная корзина)
     // Получение корзины с товарами для пользователя
     public function show(Request $request)
     {
@@ -17,57 +16,72 @@ class CartController extends Controller
         $clientId = $request->user()->id;
 
         // Находим корзину этого клиента
-        $cart = Cart::where('client_id', $clientId)->first();
+        $cartProducts = CartProduct::where('client_id', $clientId)->get();
 
         // Если корзины нет, возвращаем ошибку
-        if (!$cart) {
+        if ($cartProducts->isEmpty()) {
             return response()->json(['message' => 'Корзина не найдена'], 404);
         }
 
         // Загружаем товары в корзине
-        $cart->load('products');
+        $products = $cartProducts->map(function ($cartProduct) {
+            return [
+                'id' => $cartProduct->product->id,
+                'name' => $cartProduct->product->name,
+                'price' => $cartProduct->product->price,
+                'photo' => $cartProduct->product->photo,
+                'description' => $cartProduct->product->description,
+                'quantity' => $cartProduct->quantity, // Количество товара в корзине
+            ];
+        });
 
         // Пересчитываем общую стоимость корзины
-        $cart->total_cost = $cart->calculateTotalCost();
+        $totalCost = $products->sum(function ($product) {
+            return $product['price'] * $product['quantity'];
+        });
 
-        // Возвращаем корзину с товарами (без дублирования)
+        // Возвращаем корзину с товарами
         return response()->json([
-            'cart' => [
-                'id' => $cart->id,
-                'total_cost' => $cart->total_cost,
-                'created_at' => $cart->created_at,
-                'updated_at' => $cart->updated_at,
-                'products' => $cart->products->map(function ($product) {
-                    return [
-                        'id' => $product->id,
-                        'name' => $product->name,
-                        'price' => $product->price,
-                        'photo' => $product->photo,
-                        'description' => $product->description,
-                        'quantity' => $product->pivot->quantity, // Количество товара в корзине
-                    ];
-                })
+            'status' => 'success',
+            'data' => [
+                'cart' => [
+                    'total_cost' => $totalCost,
+                    'created_at' => $cartProducts->first()->created_at,
+                    'updated_at' => $cartProducts->first()->updated_at,
+                    'products' => $products,
+                ]
             ]
         ]);
     }
 
-
-
-    // Обновление корзины (например, обновление общей стоимости)
+    // Обновление корзины ( обновление общей стоимости)
     public function update(Request $request)
     {
-        $cart = $this->getUserCart($request->user()->id);
+        $cartProducts = $this->getUserCartProducts($request->user()->id);
 
-        $cart->total_cost = $cart->calculateTotalCost();
-        $cart->save();
+        // Пересчитываем общую стоимость корзины
+        $totalCost = $cartProducts->sum(function ($cartProduct) {
+            return $cartProduct->product->price * $cartProduct->quantity;
+        });
 
-        return response()->json($cart);
+        // Обновляем стоимость корзины
+        foreach ($cartProducts as $cartProduct) {
+            $cartProduct->save();
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Корзина успешно обновлена',
+            'data' => [
+                'total_cost' => $totalCost
+            ]
+        ]);
     }
 
     // Добавление товара в корзину
     public function addProduct(Request $request, $productId)
     {
-        $cart = $this->getUserCart($request->user()->id);
+        $clientId = $request->user()->id;
 
         // Находим продукт по ID
         $product = Product::findOrFail($productId);
@@ -76,66 +90,104 @@ class CartController extends Controller
         $quantity = $request->input('quantity', 1);
 
         // Проверяем, есть ли уже этот товар в корзине
-        $existingProduct = $cart->products()->where('product_id', $productId)->first();
+        $existingCartProduct = CartProduct::where('client_id', $clientId)
+            ->where('product_id', $productId)
+            ->first();
 
-        if ($existingProduct) {
+        if ($existingCartProduct) {
             // Если товар уже есть в корзине, увеличиваем количество
-            $newQuantity = $existingProduct->pivot->quantity + $quantity;
-            $cart->products()->updateExistingPivot($productId, ['quantity' => $newQuantity]);
+            $existingCartProduct->quantity += $quantity;
+            $existingCartProduct->save();
         } else {
             // Если товара нет в корзине, добавляем его с количеством
-            $cart->products()->attach($productId, ['quantity' => $quantity]);
+            CartProduct::create([
+                'client_id' => $clientId,
+                'product_id' => $productId,
+                'quantity' => $quantity,
+            ]);
         }
 
         // Пересчитываем общую стоимость корзины
-        $cart->total_cost = $cart->calculateTotalCost();
-        $cart->save();
+        $cartProducts = $this->getUserCartProducts($clientId);
+        $totalCost = $cartProducts->sum(function ($cartProduct) {
+            return $cartProduct->product->price * $cartProduct->quantity;
+        });
 
-        return response()->json($cart);
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Товар успешно добавлен в корзину'
+        ]);
     }
 
     // Обновление количества товара в корзине
     public function updateProduct(Request $request, $productId)
     {
-        $cart = $this->getUserCart($request->user()->id);
+        $clientId = $request->user()->id;
 
         $quantity = $request->input('quantity');
         if ($quantity < 1) {
-            return response()->json(['message' => 'Количество товара должно быть больше 0'], 400);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Количество товара должно быть больше 0'
+            ], 400);
         }
 
         // Обновляем количество товара в корзине
-        $cart->products()->updateExistingPivot($productId, ['quantity' => $quantity]);
+        $cartProduct = CartProduct::where('client_id', $clientId)
+            ->where('product_id', $productId)
+            ->first();
+
+        if (!$cartProduct) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Товар не найден в корзине'
+            ], 404);
+        }
+
+        $cartProduct->quantity = $quantity;
+        $cartProduct->save();
 
         // Обновляем стоимость корзины
-        $cart->total_cost = $cart->calculateTotalCost();
-        $cart->save();
+        $cartProducts = $this->getUserCartProducts($clientId);
+        $totalCost = $cartProducts->sum(function ($cartProduct) {
+            return $cartProduct->product->price * $cartProduct->quantity;
+        });
 
-        return response()->json($cart);
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Количество товара в корзине успешно обновлено',
+            'data' => [
+                'total_cost' => $totalCost
+            ]
+        ]);
     }
 
     // Удаление товара из корзины
     public function removeProduct(Request $request, $productId)
     {
-        $cart = $this->getUserCart($request->user()->id);
+        $clientId = $request->user()->id;
 
         // Удаляем товар из корзины
-        $cart->products()->detach($productId);
+        CartProduct::where('client_id', $clientId)
+            ->where('product_id', $productId)
+            ->delete();
 
         // Обновляем стоимость корзины
-        $cart->total_cost = $cart->calculateTotalCost();
-        $cart->save();
+        $cartProducts = $this->getUserCartProducts($clientId);
+        $totalCost = $cartProducts->sum(function ($cartProduct) {
+            return $cartProduct->product->price * $cartProduct->quantity;
+        });
 
-        return response()->json($cart);
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Товар успешно удален из корзины'
+
+        ]);
     }
 
     // Вспомогательный метод для получения корзины пользователя
-    private function getUserCart($clientId)
+    private function getUserCartProducts($clientId)
     {
-        $cart = Cart::where('client_id', $clientId)->first();
-        if (!$cart) {
-            throw new ModelNotFoundException('Корзина не найдена');
-        }
-        return $cart;
+        return CartProduct::where('client_id', $clientId)->get();
     }
 }

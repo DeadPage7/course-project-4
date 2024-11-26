@@ -44,6 +44,6 @@ Route::middleware('auth:sanctum')->group(function () {
     // Удалить товар из корзины
     Route::delete('/cart/product/{productId}', [CartController::class, 'removeProduct']);
 
-    // Обновить корзину (например, пересчитать стоимость)
+    // Обновить корзину (пересчитать стоимость)
     Route::put('/cart', [CartController::class, 'update']);
 });
