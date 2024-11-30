@@ -14,6 +14,7 @@ class CreateOrdersTable extends Migration
             $table->foreignId('address_id')->constrained('addresses');
             $table->date('order_date');
             $table->decimal('total_cost', 10, 2);
+            $table->foreignId('status_id')->constrained('statuses')->default(1);
             $table->timestamps();
         });
     }

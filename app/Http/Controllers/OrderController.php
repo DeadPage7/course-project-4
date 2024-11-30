@@ -1,88 +1,112 @@
 <?php
 
 namespace App\Http\Controllers;
+use App\Models\Order;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class OrderController extends Controller
 {
     // Получение списка всех заказов
     public function index()
     {
-        return response()->json(Order::all()); // Возвращаем все заказы
+        // Получаем заказы только для текущего пользователя
+        $orders = Auth::user()->orders;
+        return response()->json($orders);
     }
 
     // Создание нового заказа
     public function store(Request $request)
     {
-        // Валидация данных для создания заказа с кастомными сообщениями
-        $request->validate([
-            'client_id' => 'required|exists:clients,id', // Идентификатор клиента
-            'address_id' => 'required|exists:addresses,id', // Идентификатор адреса
-            'order_date' => 'required|date', // Дата заказа
-            'total_cost' => 'required|numeric', // Общая стоимость заказа
-        ], [
-            'client_id.required' => 'Поле "Идентификатор клиента" обязательно для заполнения.',
-            'client_id.exists' => 'Клиент с таким идентификатором не существует.',
-            'address_id.required' => 'Поле "Идентификатор адреса" обязательно для заполнения.',
-            'address_id.exists' => 'Адрес с таким идентификатором не существует.',
-            'order_date.required' => 'Поле "Дата заказа" обязательно для заполнения.',
-            'order_date.date' => 'Поле "Дата заказа" должно быть валидной датой.',
-            'total_cost.required' => 'Поле "Общая стоимость" обязательно для заполнения.',
-            'total_cost.numeric' => 'Поле "Общая стоимость" должно быть числом.',
+        // Валидируем данные заказа
+        $validated = $request->validate([
+            'address_id' => 'required|exists:addresses,id',
+            'total_cost' => 'required|numeric',
+            'products' => 'required|array',  // Валидируем, что 'products' - массив
+            'products.*.product_id' => 'required|exists:products,id',  // Валидируем, что каждый товар существует
+            'products.*.quantity' => 'required|numeric|min:1',  // Валидируем количество товара
         ]);
 
-        // Создание нового заказа
-        $order = Order::create($request->all());
+        // Создаем заказ для текущего пользователя
+        $order = new Order();
+        $order->client_id = Auth::id(); // Привязываем заказ к текущему пользователю
+        $order->address_id = $validated['address_id'];
+        $order->total_cost = $validated['total_cost'];
+        $order->status_id = 1; // Например, статус "Принят"
+        $order->order_date = now();
+        $order->save();
 
-        // Возвращаем созданный заказ с кодом 201
-        return response()->json($order, 201);
+        // Проходим по товарам и добавляем их в таблицу order_items
+        foreach ($validated['products'] as $product) {
+            // Вычисляем стоимость товара в заказе
+            $productModel = Product::find($product['product_id']);
+            $totalProductCost = $productModel->price * $product['quantity'];
+
+            // Добавляем товар в order_items
+            $order->orderItems()->create([
+                'product_id' => $product['product_id'],
+                'quantity' => $product['quantity'],
+                'total_cost' => $totalProductCost
+            ]);
+        }
+
+        return response()->json($order, 201); // Возвращаем созданный заказ
     }
+
 
     // Получение данных о заказе
     public function show($id)
     {
-        // Находим заказ по id или возвращаем ошибку 404
-        return response()->json(Order::findOrFail($id));
+        // Находим заказ по идентификатору
+        $order = Auth::user()->orders()->find($id);
+
+        if (!$order) {
+            return response()->json(['error' => 'Заказ не найден'], 404);
+        }
+
+        return response()->json($order);
     }
 
     // Обновление заказа
     public function update(Request $request, $id)
     {
-        // Валидация данных для обновления заказа с кастомными сообщениями
-        $request->validate([
-            'client_id' => 'required|exists:clients,id', // Идентификатор клиента
-            'address_id' => 'required|exists:addresses,id', // Идентификатор адреса
-            'order_date' => 'required|date', // Дата заказа
-            'total_cost' => 'required|numeric', // Общая стоимость заказа
-        ], [
-            'client_id.required' => 'Поле "Идентификатор клиента" обязательно для заполнения.',
-            'client_id.exists' => 'Клиент с таким идентификатором не существует.',
-            'address_id.required' => 'Поле "Идентификатор адреса" обязательно для заполнения.',
-            'address_id.exists' => 'Адрес с таким идентификатором не существует.',
-            'order_date.required' => 'Поле "Дата заказа" обязательно для заполнения.',
-            'order_date.date' => 'Поле "Дата заказа" должно быть валидной датой.',
-            'total_cost.required' => 'Поле "Общая стоимость" обязательно для заполнения.',
-            'total_cost.numeric' => 'Поле "Общая стоимость" должно быть числом.',
+        // Находим заказ текущего пользователя
+        $order = Auth::user()->orders()->find($id);
+
+        if (!$order) {
+            return response()->json(['error' => 'Заказ не найден'], 404);
+        }
+
+        // Валидируем данные
+        $validated = $request->validate([
+            'address_id' => 'required|exists:addresses,id',
+            'total_cost' => 'required|numeric',
+            // Другая валидация
         ]);
 
-        // Находим заказ по id
-        $order = Order::findOrFail($id);
+        // Обновляем заказ
+        $order->address_id = $validated['address_id'];
+        $order->total_cost = $validated['total_cost'];
+        $order->save();
 
-        // Обновляем заказ с новыми данными
-        $order->update($request->all());
-
-        // Возвращаем обновленный заказ
         return response()->json($order);
     }
+
 
     // Удаление заказа
     public function destroy($id)
     {
-        // Удаляем заказ по id
-        Order::destroy($id);
+        // Находим заказ текущего пользователя
+        $order = Auth::user()->orders()->find($id);
 
-        // Возвращаем успешный ответ с кодом 204 (без содержимого)
-        return response()->json(null, 204);
+        if (!$order) {
+            return response()->json(['error' => 'Заказ не найден'], 404);
+        }
+
+        // Удаляем заказ
+        $order->delete();
+
+        return response()->json(['message' => 'Заказ удален']);
     }
 }

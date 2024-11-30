@@ -1,7 +1,8 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Models\Product;
+
+use App\Models\Product; // Добавьте эту строку
 use Illuminate\Http\Request;
 
 class ProductController extends Controller

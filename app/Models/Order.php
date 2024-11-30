@@ -10,7 +10,7 @@ class Order extends Model
     use HasFactory;
 
     protected $fillable = [
-        'client_id', 'address_id', 'order_date', 'total_cost'
+        'client_id', 'address_id', 'order_date', 'total_cost', 'status_id'
     ];
 
     public function client()
@@ -26,5 +26,11 @@ class Order extends Model
     public function orderItems()
     {
         return $this->hasMany(OrderItem::class);
+    }
+    // Связь с моделью Status (заказ имеет один статус)
+
+    public function status()
+    {
+        return $this->belongsTo(Status::class);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\OrderItem;
 use Illuminate\Http\Request;
 
 class OrderItemController extends Controller
@@ -38,13 +39,22 @@ class OrderItemController extends Controller
         // Возвращаем созданную позицию с кодом 201
         return response()->json($orderItem, 201);
     }
-
+    
     // Получение данных о позиции заказа
     public function show($id)
     {
-        // Находим позицию заказа по id или возвращаем ошибку 404
-        return response()->json(OrderItem::findOrFail($id));
+        // Находим все позиции для указанного заказа
+        $orderItems = OrderItem::where('order_id', $id)->get();
+
+        // Проверяем, если позиции не найдены
+        if ($orderItems->isEmpty()) {
+            return response()->json(['error' => 'Позиции для данного заказа не найдены'], 404);
+        }
+
+        // Возвращаем найденные позиции
+        return response()->json($orderItems);
     }
+
 
     // Обновление позиции заказа
     public function update(Request $request, $id)
