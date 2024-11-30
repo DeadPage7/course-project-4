@@ -14,7 +14,7 @@ class DatabaseSeeder extends Seeder
             ProductSeeder::class,
             ClientSeeder::class,
             AddressSeeder::class,
-            CartSeeder::class,  // Добавляем вызов CartSeeder
+            CartSeeder::class,
             OrderSeeder::class,
             OrderItemSeeder::class,
         ]);

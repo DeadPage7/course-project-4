@@ -13,7 +13,7 @@ class OrderSeeder extends Seeder
     public function run()
     {
         $clients = Client::all();
-        $addresses = Address::all();
+        $addresses = Address::all(); // Получаем все адреса
 
         $status = Status::firstOrCreate(
             ['id' => 1],
@@ -21,16 +21,17 @@ class OrderSeeder extends Seeder
         );
 
         foreach ($clients as $client) {
-            foreach ($addresses as $address) {
-                // Создаем заказ, но оставляем total_cost = 0
-                Order::create([
-                    'client_id' => $client->id,
-                    'address_id' => $address->id,
-                    'order_date' => now(),
-                    'total_cost' => 0, // Начальная стоимость будет вычислена в контроллере
-                    'status_id' => $status->id,
-                ]);
-            }
+            // Выбираем первый адрес из списка адресов клиента
+            $address = $addresses->first(); // Выбираем первый адрес
+
+            // Создаём только один заказ для клиента
+            Order::create([
+                'client_id' => $client->id,
+                'address_id' => $address->id, // Используем первый адрес
+                'order_date' => now(),
+                'total_cost' => 0, // Начальная стоимость будет вычислена в контроллере
+                'status_id' => $status->id,
+            ]);
         }
     }
 }
