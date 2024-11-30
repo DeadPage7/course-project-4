@@ -34,9 +34,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/cart', [CartController::class, 'update']);                          // Обновление корзины
 
     // Заказы
-    Route::post('/orders', [OrderController::class, 'store']); // Создание нового заказа
-    Route::post('/orders/show', [OrderController::class, 'show']); // Просмотр заказа
-    Route::delete('/orders', [OrderController::class, 'destroy']); // Удаление заказа
+    Route::get('/orders', [OrderController::class, 'index']);           // Все заказы текущего пользователя
+    Route::get('/orders/{id}', [OrderController::class, 'show']);       // Просмотр конкретного заказа
+    Route::post('/orders', [OrderController::class, 'store']);          // Создание нового заказа
+    Route::delete('/orders/{id}', [OrderController::class, 'destroy']); // Удаление заказа
 
     // Позиции заказов (если нужно)
     Route::get('/order-items', [OrderItemController::class, 'index']);     // Все позиции заказов
