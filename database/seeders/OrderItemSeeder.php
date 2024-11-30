@@ -11,16 +11,21 @@ class OrderItemSeeder extends Seeder
 {
     public function run()
     {
-        $order = Order::first(); // Получаем первый заказ
-        $product = Product::first(); // Получаем первый продукт
+        $orders = Order::all(); // Получаем все заказы
+        $products = Product::all(); // Получаем все товары
 
-        OrderItem::create([
-            'order_id' => $order->id,
-            'product_id' => $product->id,
-            'quantity' => 3,
-            'total_cost' => 900.00, // Стоимость для этой позиции (3 штуки по 300 рублей)
-        ]);
-
-        // Можно добавить больше позиций для других заказов
+        foreach ($orders as $order) {
+            // Выбираем несколько товаров для этого заказа
+            $items = $products->random(rand(1, 3)); // Выбираем 1-3 товара для каждого заказа
+            foreach ($items as $product) {
+                $quantity = rand(1, 5); // Случайное количество товара
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $product->id,
+                    'quantity' => $quantity,
+                    'total_cost' => $product->price * $quantity, // Стоимость товара
+                ]);
+            }
+        }
     }
 }
