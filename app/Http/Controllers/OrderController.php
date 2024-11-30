@@ -1,64 +1,82 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Models\Order;
 
+use App\Models\Order;
+use App\Models\CartProduct;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class OrderController extends Controller
 {
-    // Получение списка всех заказов
+    // Получение списка всех заказов пользователя
     public function index()
     {
-        // Получаем заказы только для текущего пользователя
-        $orders = Auth::user()->orders;
-        return response()->json($orders);
+        // Получение текущего авторизованного пользователя
+        $user = auth()->user();
+
+        // Получение всех заказов пользователя вместе со статусом и продуктами
+        $orders = $user->orders()->with('status', 'items.product')->get();
+
+        // Возврат списка заказов в формате JSON
+        return response()->json($orders, 200);
     }
+
 
     // Создание нового заказа
     public function store(Request $request)
     {
-        // Валидируем данные заказа
+        // Валидируем адрес
         $validated = $request->validate([
             'address_id' => 'required|exists:addresses,id',
-            'total_cost' => 'required|numeric',
-            'products' => 'required|array',  // Валидируем, что 'products' - массив
-            'products.*.product_id' => 'required|exists:products,id',  // Валидируем, что каждый товар существует
-            'products.*.quantity' => 'required|numeric|min:1',  // Валидируем количество товара
         ]);
 
-        // Создаем заказ для текущего пользователя
+        // Получаем текущего пользователя и его корзину
+        $user = Auth::user();
+        $cartProducts = $user->cartProducts;
+
+        // Если корзина пуста, возвращаем ошибку
+        if ($cartProducts->isEmpty()) {
+            return response()->json(['error' => 'Корзина пуста, невозможно создать заказ'], 400);
+        }
+
+        // Вычисляем общую стоимость заказа
+        $totalCost = $cartProducts->sum(function ($cartProduct) {
+            return $cartProduct->product->price * $cartProduct->quantity;
+        });
+
+        // Создаем новый заказ
         $order = new Order();
-        $order->client_id = Auth::id(); // Привязываем заказ к текущему пользователю
+        $order->client_id = $user->id;
         $order->address_id = $validated['address_id'];
-        $order->total_cost = $validated['total_cost'];
+        $order->total_cost = $totalCost;
         $order->status_id = 1; // Например, статус "Принят"
         $order->order_date = now();
         $order->save();
 
-        // Проходим по товарам и добавляем их в таблицу order_items
-        foreach ($validated['products'] as $product) {
-            // Вычисляем стоимость товара в заказе
-            $productModel = Product::find($product['product_id']);
-            $totalProductCost = $productModel->price * $product['quantity'];
-
-            // Добавляем товар в order_items
+        // Переносим товары из корзины в order_items
+        foreach ($cartProducts as $cartProduct) {
             $order->orderItems()->create([
-                'product_id' => $product['product_id'],
-                'quantity' => $product['quantity'],
-                'total_cost' => $totalProductCost
+                'product_id' => $cartProduct->product_id,
+                'quantity' => $cartProduct->quantity,
+                'total_cost' => $cartProduct->product->price * $cartProduct->quantity,
             ]);
         }
 
-        return response()->json($order, 201); // Возвращаем созданный заказ
-    }
+        // Очищаем корзину после создания заказа
+//        $user->cartProducts()->delete();
 
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Заказ успешно создан',
+            'order' => $order
+        ], 201);
+    }
 
     // Получение данных о заказе
     public function show($id)
     {
-        // Находим заказ по идентификатору
+        // Находим заказ текущего пользователя
         $order = Auth::user()->orders()->find($id);
 
         if (!$order) {
@@ -68,7 +86,7 @@ class OrderController extends Controller
         return response()->json($order);
     }
 
-    // Обновление заказа
+    // Обновление заказа (например, обновление адреса или статуса)
     public function update(Request $request, $id)
     {
         // Находим заказ текущего пользователя
@@ -81,18 +99,18 @@ class OrderController extends Controller
         // Валидируем данные
         $validated = $request->validate([
             'address_id' => 'required|exists:addresses,id',
-            'total_cost' => 'required|numeric',
-            // Другая валидация
+            'status_id' => 'nullable|integer',
         ]);
 
-        // Обновляем заказ
+        // Обновляем данные заказа
         $order->address_id = $validated['address_id'];
-        $order->total_cost = $validated['total_cost'];
+        if (isset($validated['status_id'])) {
+            $order->status_id = $validated['status_id'];
+        }
         $order->save();
 
         return response()->json($order);
     }
-
 
     // Удаление заказа
     public function destroy($id)

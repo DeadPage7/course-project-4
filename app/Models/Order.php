@@ -25,12 +25,15 @@ class Order extends Model
 
     public function orderItems()
     {
-        return $this->hasMany(OrderItem::class);
+        return $this->hasMany(OrderItem::class, 'order_id');
     }
-    // Связь с моделью Status (заказ имеет один статус)
 
     public function status()
     {
         return $this->belongsTo(Status::class);
+    }
+    public function items()
+    {
+        return $this->hasMany(OrderItem::class);
     }
 }
