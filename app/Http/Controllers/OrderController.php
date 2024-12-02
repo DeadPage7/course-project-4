@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Address;
 use App\Models\Order;
 use App\Models\CartProduct;
+use App\Models\OrderItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
@@ -37,54 +40,71 @@ class OrderController extends Controller
     // Создание нового заказа
     public function store(Request $request)
     {
-        // Валидируем адрес
-        $validated = $request->validate([
-            'address_id' => 'required|exists:addresses,id',
-        ]);
+        $clientId = $request->user()->id;
 
-        // Получаем текущего пользователя и его корзину
-        $user = Auth::user();
-        $cartProducts = $user->cartProducts;
+        // Получаем адрес доставк
+        $address = Address::where('client_id', $clientId)->latest('created_at')->first();
 
-        // Если корзина пуста, возвращаем ошибку
+        if (!$address) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Не удалось определить адрес доставки. Пожалуйста, добавьте адрес.'
+            ], 400);
+        }
+
+        // Получаем товары из корзины
+        $cartProducts = CartProduct::where('client_id', $clientId)->with('product')->get();
+
         if ($cartProducts->isEmpty()) {
-            return response()->json(['error' => 'Корзина пуста, невозможно создать заказ'], 400);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Корзина пуста. Добавьте товары для оформления заказа.'
+            ], 400);
         }
 
-        // Вычисляем общую стоимость заказа
-        $totalCost = $cartProducts->sum(function ($cartProduct) {
-            return $cartProduct->product->price * $cartProduct->quantity;
-        });
+        // Рассчитываем общую стоимость
+        $totalCost = $cartProducts->sum(fn($cartProduct) => $cartProduct->product->price * $cartProduct->quantity);
 
+        try {
+            DB::transaction(function () use ($clientId, $address, $cartProducts, $totalCost) {
+                // Создаём заказ
+                $order = Order::create([
+                    'client_id' => $clientId,
+                    'address_id' => $address->id,
+                    'order_date' => now(),
+                    'total_cost' => $totalCost,
+                    'status_id' => 1, // Установите подходящий статус
+                ]);
 
+                // Добавляем товары в заказ
+                $orderItems = $cartProducts->map(function ($cartProduct) use ($order) {
+                    return [
+                        'order_id' => $order->id,
+                        'product_id' => $cartProduct->product_id,
+                        'quantity' => $cartProduct->quantity,
+                        'total_cost' => $cartProduct->product->price * $cartProduct->quantity,
+                    ];
+                });
 
-        // Создаем новый заказ
-        $order = new Order();
-        $order->client_id = $user->id;
-        $order->address_id = $validated['address_id'];
-        $order->total_cost = $totalCost; // Сохраняем общую стоимость
-        $order->status_id = 1; // Статус "Принят"
-        $order->order_date = now();
-        $order->save();
+                // Массовая вставка в order_items
+                OrderItem::insert($orderItems->toArray());
 
-        // Переносим товары из корзины в order_items
-        foreach ($cartProducts as $cartProduct) {
-            $order->orderItems()->create([
-                'product_id' => $cartProduct->product_id,
-                'quantity' => $cartProduct->quantity,
-                'total_cost' => $cartProduct->product->price * $cartProduct->quantity,
-            ]);
+                // Очищаем корзину
+                CartProduct::where('client_id', $clientId)->delete();
+            });
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Заказ успешно оформлен.',
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Ошибка при создании заказа: ' . $e->getMessage(),
+            ], 500);
         }
-
-        // Очистка корзины после создания заказа
-        // $user->cartProducts()->delete(); // Uncomment if needed
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Заказ успешно создан',
-            'order' => $order
-        ], 201);
     }
+
 
     // Получение данных о заказе
     public function show($id)

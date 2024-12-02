@@ -16,6 +16,7 @@ Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logo
 
 // Товары и категории
 Route::get('/product', [ProductController::class, 'index']);      // Все товары
+Route::post('/product', [ProductController::class, 'store']);      // Все товары
 Route::get('/product/{id}', [ProductController::class, 'show']);  // Конкретный товар
 Route::get('/categories', [CategoryController::class, 'index']); // Все категории
 Route::get('/category/{id}/products', [CategoryController::class, 'products']); // Товары категории
