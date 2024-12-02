@@ -14,13 +14,14 @@ class ProductController extends Controller
     }
 
     // Создание нового товара
+    // Метод для создания нового товара
     public function store(Request $request)
     {
         // Валидация данных для создания товара с кастомными сообщениями
         $request->validate([
             'name' => 'required|string|max:255', // Название товара
             'price' => 'required|numeric', // Цена товара
-            'photo' => 'required|string', // Фото товара
+            'photo' => 'required|file|image|max:2048', // Указываем, что файл должен быть изображением
             'description' => 'required|string', // Описание товара
             'category_id' => 'required|exists:categories,id', // Идентификатор категории
         ], [
@@ -29,20 +30,33 @@ class ProductController extends Controller
             'name.max' => 'Поле "Название товара" не должно превышать 255 символов.',
             'price.required' => 'Поле "Цена товара" обязательно для заполнения.',
             'price.numeric' => 'Поле "Цена товара" должно быть числом.',
-            'photo.required' => 'Поле "Фото товара" обязательно для заполнения.',
-            'photo.string' => 'Поле "Фото товара" должно быть строкой.',
+            'photo.required' => 'Необходимо загрузить фото товара.',
+            'photo.image' => 'Файл должен быть изображением.',
+            'photo.max' => 'Размер изображения не должен превышать 2 МБ.',
             'description.required' => 'Поле "Описание товара" обязательно для заполнения.',
             'description.string' => 'Поле "Описание товара" должно быть строкой.',
             'category_id.required' => 'Поле "Идентификатор категории" обязательно для заполнения.',
             'category_id.exists' => 'Категория с таким идентификатором не существует.',
         ]);
 
-        // Создание нового товара
-        $product = Product::create($request->all());
+        // Сохраняем фото товара в public папке
+        $photoPath = $request->file('photo')->store('products', 'public');
 
-        // Возвращаем созданный товар с кодом 201
-        return response()->json($product, 201);
+        // Генерируем полный URL для фото
+        $photoUrl = url('storage/' . $photoPath);
+
+        // Создаем новый товар
+        $product = Product::create([
+            'name' => $request->name,
+            'price' => $request->price,
+            'photo' => $photoUrl, // Отправляем полный путь к изображению
+            'description' => $request->description,
+            'category_id' => $request->category_id,
+        ]);
+
+        return response()->json($product, 201); // Возвращаем созданный товар
     }
+
 
     // Получение данных о товаре
     public function show($id)
