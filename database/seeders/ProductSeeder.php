@@ -13,84 +13,83 @@ class ProductSeeder extends Seeder
         $categories = Category::all();
 
         Product::create([
-            'name' => 'Роза',
+            'name' => 'Альтерия',
             'price' => 300.00,
-            'photo' => 'rose.jpg',
-            'description' => 'Красная роза для дома',
-            'category_id' => $categories->first()->id,
+            'photo' => 'public/products/image1.png',
+            'description' => 'Растение, которое станет идеальным дополнением любого пространства.',
+            'category_id' => $categories[0]->id, // Модульные растения
         ]);
 
         Product::create([
-            'name' => 'Тюльпан',
+            'name' => 'Версия',
             'price' => 150.00,
-            'photo' => 'tulip.jpg',
-            'description' => 'Желтые тюльпаны',
-            'category_id' => $categories[0]->id,  // Цветущие растения
+            'photo' => 'public/products/image2.png',
+            'description' => 'Подходит для тех, кто ценит минимализм и простоту.',
+            'category_id' => $categories[3]->id, // Минималистичные формы
         ]);
 
         Product::create([
-            'name' => 'Кактус',
+            'name' => 'Синтексия',
             'price' => 200.00,
-            'photo' => 'cactus.jpg',
-            'description' => 'Мини кактус для офиса',
-            'category_id' => $categories[3]->id,  // Кактусы
+            'photo' => 'public/products/image3.png',
+            'description' => 'Идеальный выбор для создания уютной атмосферы.',
+            'category_id' => $categories[4]->id, // Декоративные решения
         ]);
 
         Product::create([
-            'name' => 'Суккулент',
+            'name' => 'Эвокс',
             'price' => 100.00,
-            'photo' => 'succulent.jpg',
-            'description' => 'Суккулент для дома',
-            'category_id' => $categories[2]->id,  // Суккуленты
+            'photo' => 'public/products/image4.png',
+            'description' => 'Растение, которое радует своей неприхотливостью.',
+            'category_id' => $categories[2]->id, // Универсальные культуры
         ]);
 
         Product::create([
-            'name' => 'Фикус',
+            'name' => 'Десфера',
             'price' => 350.00,
-            'photo' => 'ficus.jpg',
-            'description' => 'Фикус для интерьера',
-            'category_id' => $categories[4]->id,  // Декоративные растения
+            'photo' => 'public/products/image5.png',
+            'description' => 'Прекрасно подойдет для декорирования офиса или дома.',
+            'category_id' => $categories[4]->id, // Декоративные решения
         ]);
 
-        // Добавляем другие продукты
         Product::create([
-            'name' => 'Петунья',
+            'name' => 'Флурия',
             'price' => 120.00,
-            'photo' => 'petunia.jpg',
-            'description' => 'Цветущая петунья',
-            'category_id' => $categories[0]->id,  // Цветущие растения
+            'photo' => 'public/products/image6.png',
+            'description' => 'Легко выращивается и добавляет живости в интерьер.',
+            'category_id' => $categories[0]->id, // Модульные растения
         ]);
 
         Product::create([
-            'name' => 'Виноградная лоза',
+            'name' => 'Гирофлора',
             'price' => 250.00,
-            'photo' => 'grapevine.jpg',
-            'description' => 'Вьющаяся лоза винограда',
-            'category_id' => $categories[1]->id,  // Вьющиеся растения
+            'photo' => 'public/products/image7.png',
+            'description' => 'Универсальное растение для оформления различных пространств.',
+            'category_id' => $categories[1]->id, // Инновационные цветы
         ]);
 
         Product::create([
-            'name' => 'Драцена',
+            'name' => 'Калидора',
             'price' => 400.00,
-            'photo' => 'dracaena.jpg',
-            'description' => 'Драцена для дома',
-            'category_id' => $categories[4]->id,  // Декоративные растения
+            'photo' => 'public/products/image8.png',
+            'description' => 'Отличный выбор для тех, кто любит экспериментировать с растениями.',
+            'category_id' => $categories[4]->id, // Декоративные решения
         ]);
 
         Product::create([
-            'name' => 'Лаванда',
+            'name' => 'Элатия',
             'price' => 220.00,
-            'photo' => 'lavender.jpg',
-            'description' => 'Лаванда для сада',
-            'category_id' => $categories[0]->id,  // Цветущие растения
+            'photo' => 'public/products/image9.png',
+            'description' => 'Универсальное растение с богатой историей.',
+            'category_id' => $categories[0]->id, // Модульные растения
         ]);
 
         Product::create([
-            'name' => 'Филодендрон',
+            'name' => 'Норестия',
             'price' => 180.00,
-            'photo' => 'philodendron.jpg',
-            'description' => 'Филодендрон для квартиры',
-            'category_id' => $categories[4]->id,  // Декоративные растения
+            'photo' => 'public/products/image10.png',
+            'description' => 'Хорошо вписывается в любую обстановку, добавляя уюта.',
+            'category_id' => $categories[4]->id, // Декоративные решения
         ]);
     }
 }
