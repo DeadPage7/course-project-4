@@ -13,30 +13,25 @@ class CartSeeder extends Seeder
     {
         // Получаем всех клиентов
         $clients = Client::all();
+        $products = Product::all(); // Получаем все продукты
 
-        // Получаем все продукты
-        $products = Product::all();
+        // Добавляем товары в корзину для всех клиентов
+        foreach ($clients as $client) {
+            $numOfProducts = 3;  // Устанавливаем количество товаров в корзине для каждого клиента
 
-        // Для первого и второго клиента добавляем товары в корзину
-        foreach ($clients as $index => $client) {
-            if ($index == 0 || $index == 1) { // Если это первый или второй клиент
-                // Добавляем 3 товара в корзину
-                $numOfProducts = 3;  // Устанавливаем количество товаров в корзине
+            for ($i = 0; $i < $numOfProducts; $i++) {
+                // Выбираем продукт по порядку из списка
+                $product = $products[$i % count($products)];  // Циклично выбираем товары
+                $quantity = 1;  // Устанавливаем количество товара (1 шт.)
 
-                for ($i = 0; $i < $numOfProducts; $i++) {
-                    // Выбираем продукт по порядку из списка
-                    $product = $products[$i % count($products)];  // Циклично выбираем товары
-                    $quantity = 1;  // Устанавливаем количество товара (1 шт.)
-
-                    // Добавляем товар в корзину
-                    DB::table('carts_products')->insert([
-                        'client_id' => $client->id,
-                        'product_id' => $product->id,
-                        'quantity' => $quantity,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                }
+                // Добавляем товар в корзину
+                DB::table('carts_products')->insert([
+                    'client_id' => $client->id,
+                    'product_id' => $product->id,
+                    'quantity' => $quantity,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
             }
         }
     }

@@ -15,22 +15,26 @@ class OrderSeeder extends Seeder
         $clients = Client::all();
         $addresses = Address::all();
 
+        // Статус для заказов
         $status = Status::firstOrCreate(
             ['id' => 1],
             ['name' => 'Принят']
         );
 
-        foreach ($clients as $client) {
-            foreach ($addresses as $address) {
-                // Создаем заказ, но оставляем total_cost = 0
-                Order::create([
-                    'client_id' => $client->id,
-                    'address_id' => $address->id,
-                    'order_date' => now(),
-                    'total_cost' => 0, // Начальная стоимость будет вычислена в контроллере
-                    'status_id' => $status->id,
-                ]);
-            }
+        // Получаем первого клиента
+        $firstClient = $clients->first();
+
+        // Создаем заказ только для первого клиента
+        foreach ($addresses as $address) {
+            // Создаем заказ только для первого клиента
+            Order::create([
+                'client_id' => $firstClient->id,
+                'address_id' => $address->id,
+                'order_date' => now(),
+                'total_cost' => 0, // Стоимость будет вычислена позже
+                'status_id' => $status->id,
+            ]);
         }
+
     }
 }
