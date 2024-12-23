@@ -14,6 +14,9 @@ class Client extends Model
     protected $fillable = [
         'full_name', 'password', 'email', 'login', 'birth', 'telephone'
     ];
+    protected $hidden = [
+       'password'
+    ];
 
     public function addresses()
     {

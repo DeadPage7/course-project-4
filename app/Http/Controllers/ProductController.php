@@ -13,7 +13,6 @@ class ProductController extends Controller
         return response()->json(Product::all()); // Возвращаем все товары
     }
 
-    // Создание нового товара
     // Метод для создания нового товара
     public function store(Request $request)
     {

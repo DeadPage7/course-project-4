@@ -10,11 +10,7 @@ use Illuminate\Support\Facades\Validator;
 
 class ClientController extends Controller
 {
-    // Получение списка всех клиентов
-    public function index()
-    {
-        return response()->json(Client::all()); // Возвращаем всех клиентов
-    }
+
     public function profile(Request $request)
     {
         return response()->json($request->user());
@@ -107,13 +103,5 @@ class ClientController extends Controller
         return response()->json($client);
     }
 
-    // Удаление клиента по id
-    public function destroy($id)
-    {
-        // Удаляем клиента по id
-        Client::destroy($id);
 
-        // Возвращаем успешный ответ с кодом 204 (без содержимого)
-        return response()->json(null, 204);
-    }
 }
