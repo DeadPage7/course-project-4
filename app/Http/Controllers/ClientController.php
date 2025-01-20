@@ -58,7 +58,6 @@ class ClientController extends Controller
     // Обновление данных клиента
     public function update(Request $request)
     {
-        // Валидация входных данных
         $validator = Validator::make($request->all(), [
             'full_name' => 'nullable|string|max:255',
             'email' => 'nullable|email|unique:clients,email,' . $request->user()->id,
@@ -68,40 +67,24 @@ class ClientController extends Controller
             'telephone' => 'nullable|string|max:255',
         ]);
 
-        // Если валидация не прошла, возвращаем ошибку
         if ($validator->fails()) {
             return response()->json($validator->errors(), 400);
         }
 
-        // Получаем текущего аутентифицированного клиента
         $client = $request->user();
 
-        // Обновляем данные клиента, только если они были переданы в запросе
-        if ($request->has('full_name')) {
-            $client->full_name = $request->full_name;
-        }
-        if ($request->has('email')) {
-            $client->email = $request->email;
-        }
+        // Обновляем только те поля, которые были переданы
+        $client->fill($request->only(['full_name', 'email', 'password', 'login', 'birth', 'telephone']));
+
         if ($request->has('password')) {
-            $client->password = Hash::make($request->password); // Хешируем новый пароль
-        }
-        if ($request->has('login')) {
-            $client->login = $request->login;
-        }
-        if ($request->has('birth')) {
-            $client->birth = $request->birth;
-        }
-        if ($request->has('telephone')) {
-            $client->telephone = $request->telephone;
+            $client->password = Hash::make($request->password);
         }
 
-        // Сохраняем обновленные данные в базе
         $client->save();
 
-        // Возвращаем успешный ответ с обновленными данными
         return response()->json($client);
     }
+
 
 
 }

@@ -75,7 +75,6 @@ class AuthController extends Controller
 
         // Возвращаем успешный ответ с данными клиента и новым токеном
         return response()->json([
-            'message' => 'Авторизация успешна',
             'client' => $client,
             'token' => $token
         ]);
