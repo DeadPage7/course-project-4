@@ -19,7 +19,7 @@ class OrderController extends Controller
         $user = auth()->user();
 
         // Получаем все заказы пользователя, включая статус и товары
-        $orders = $user->orders()->with('status', 'items.product')->get();
+        $orders = $user->orders()->with('items.product')->get();
 
         // Пересчитываем общую стоимость для каждого заказа
         $orders = $orders->map(function ($order) {
@@ -137,7 +137,6 @@ class OrderController extends Controller
             'address_id' => $order->address_id,
             'order_date' => $order->order_date,
             'total_cost' => $calculatedTotalCost, // Возвращаем пересчитанную стоимость
-            'status_id' => $order->status_id,
             'items' => $groupedItems
         ]);
     }
