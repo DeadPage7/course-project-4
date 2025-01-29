@@ -121,7 +121,6 @@ class OrderController extends Controller
             $firstItem = $items->first();
 
             return [
-                'product_id' => $firstItem->product_id,
                 'quantity' => $items->sum('quantity'), // Суммируем количество
                 'total_cost' => $items->sum(fn($item) => $item->quantity * $item->product->price), // Пересчитываем стоимость
                 'product' => $firstItem->product // Информация о продукте

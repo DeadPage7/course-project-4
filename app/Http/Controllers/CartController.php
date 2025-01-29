@@ -42,15 +42,10 @@ class CartController extends Controller
 
         // Возвращаем корзину с товарами
         return response()->json([
-            'status' => 'success',
-            'data' => [
-                'cart' => [
                     'total_cost' => $totalCost,
                     'created_at' => $cartProducts->first()->created_at,
                     'updated_at' => $cartProducts->first()->updated_at,
                     'products' => $products,
-                ]
-            ]
         ]);
     }
 
