@@ -19,7 +19,7 @@ class OrderController extends Controller
         $user = auth()->user();
 
         // Получаем все заказы пользователя, включая статус и товары
-        $orders = $user->orders()->with('items.product')->get();
+        $orders = $user->orders()->with('status','items.product')->get();
 
         // Пересчитываем общую стоимость для каждого заказа
         $orders = $orders->map(function ($order) {
@@ -122,13 +122,13 @@ class OrderController extends Controller
 
             return [
                 'quantity' => $items->sum('quantity'), // Суммируем количество
-                'total_cost' => $items->sum(fn($item) => $item->quantity * $item->product->price), // Пересчитываем стоимость
+                'total_cost' => (string) number_format($items->sum(fn($item) => $item->quantity * $item->product->price), 2, '.', ''), // Преобразуем в строку с двумя знаками после запятой
                 'product' => $firstItem->product // Информация о продукте
             ];
         })->values();
 
-        // Пересчитываем общую стоимость заказа
-        $calculatedTotalCost = $groupedItems->sum('total_cost');
+        // Пересчитываем общую стоимость заказа (оставляем числом)
+        $calculatedTotalCost = $groupedItems->sum(fn($item) => (float) $item['total_cost']); // Переводим обратно в число для корректного подсчета
 
         // Возвращаем заказ с правильной стоимостью и объединенными товарами
         return response()->json([
@@ -136,10 +136,11 @@ class OrderController extends Controller
             'client_id' => $order->client_id,
             'address_id' => $order->address_id,
             'order_date' => $order->order_date,
-            'total_cost' => $calculatedTotalCost, // Возвращаем пересчитанную стоимость
+            'total_cost' => $calculatedTotalCost, // Оставляем числом
             'items' => $groupedItems
         ]);
     }
+
 
 
     // Обновление заказа (например, обновление адреса или статуса)

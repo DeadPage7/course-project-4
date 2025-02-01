@@ -6,6 +6,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\AddressController;
 use App\Http\Controllers\CartController;
 use Illuminate\Support\Facades\Route;
 
@@ -39,6 +40,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders/{id}', [OrderController::class, 'show']);       // Просмотр конкретного заказа
     Route::post('/orders', [OrderController::class, 'store']);          // Создание нового заказа
     Route::delete('/orders/{id}', [OrderController::class, 'destroy']); // Удаление заказа
+    // Адреса
+    Route::post('/addresses', [AddressController::class, 'store']);  // Создание нового адреса
+    Route::put('/addresses/{id}', [AddressController::class, 'update']); // Обновление адреса
+    Route::delete('/addresses/{id}', [AddressController::class, 'destroy']); // Удаление адреса
+    Route::get('/addresses', [AddressController::class, 'index']); // Получение списка адресов
 
     // Позиции заказов (если нужно)
     Route::get('/order-items', [OrderItemController::class, 'index']);     // Все позиции заказов

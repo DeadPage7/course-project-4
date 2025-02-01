@@ -10,39 +10,46 @@ class AddressController extends Controller
     // Получение списка всех адресов
     public function index()
     {
-        return response()->json(Address::all()); // Возвращаем все адреса
+        // Получаем адреса только для аутентифицированного пользователя
+        $user = auth()->user(); // Получаем текущего аутентифицированного пользователя
+        return response()->json(Address::where('client_id', $user->id)->get()); // Возвращаем только адреса пользователя
     }
 
     // Создание нового адреса
     public function store(Request $request)
     {
-        // Валидация данных, переданных в запросе с кастомными сообщениями
+        // Валидация данных
         $request->validate([
-            'city' => 'required|string|max:255', // Город
-            'street' => 'required|string|max:255', // Улица
-            'house' => 'required|string|max:50', // Номер дома
-            'floor' => 'nullable|integer', // Этаж
-            'apartment_or_office' => 'nullable|string|max:50', // Квартира или офис
-            'entrance' => 'nullable|string|max:50', // Подъезд
-            'intercom' => 'nullable|string|max:50', // Домофон
-            'comment' => 'nullable|string', // Комментарий
-        ], [
-            'city.required' => 'Поле "Город" обязательно для заполнения.',
-            'street.required' => 'Поле "Улица" обязательно для заполнения.',
-            'house.required' => 'Поле "Номер дома" обязательно для заполнения.',
-            'floor.integer' => 'Поле "Этаж" должно быть числом.',
-            'apartment_or_office.string' => 'Поле "Квартира или офис" должно быть строкой.',
-            'entrance.string' => 'Поле "Подъезд" должно быть строкой.',
-            'intercom.string' => 'Поле "Домофон" должно быть строкой.',
-            'comment.string' => 'Поле "Комментарий" должно быть строкой.',
+            'city' => 'required|string|max:255',
+            'street' => 'required|string|max:255',
+            'house' => 'required|string|max:50',
+            'floor' => 'nullable|integer',
+            'apartment_or_office' => 'nullable|string|max:50',
+            'entrance' => 'nullable|string|max:50',
+            'intercom' => 'nullable|string|max:50',
+            'comment' => 'nullable|string',
         ]);
 
-        // Создание нового адреса в базе данных
-        $address = Address::create($request->all());
+        // Получаем ID текущего аутентифицированного пользователя
+        $client_id = auth()->user()->id;
 
-        // Возвращение ответа с созданным объектом и статусом 201 (создано)
+        // Создание нового адреса с привязкой к текущему пользователю
+        $address = Address::create([
+            'city' => $request->city,
+            'street' => $request->street,
+            'house' => $request->house,
+            'floor' => $request->floor,
+            'apartment_or_office' => $request->apartment_or_office,
+            'entrance' => $request->entrance,
+            'intercom' => $request->intercom,
+            'comment' => $request->comment,
+            'client_id' => $client_id, // Привязываем к текущему пользователю
+        ]);
+
+        // Возвращаем ответ с созданным объектом и статусом 201 (создано)
         return response()->json($address, 201);
     }
+
 
     // Получение данных о конкретном адресе по его id
     public function show($id)

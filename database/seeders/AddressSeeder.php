@@ -26,5 +26,16 @@ class AddressSeeder extends Seeder
                 'comment' => 'Оставить посылку с охранником',
             ]);
         }
+            Address::create([
+                'client_id' => 2,
+                'city' => 'Москва',
+                'street' => 'Тверская улица',
+                'house' => '12',
+                'floor' => 3,
+                'apartment_or_office' => 'Квартира 101',
+                'entrance' => 'Главный вход',
+                'intercom' => '101',
+                'comment' => 'Оставить посылку с охранником',
+            ]);
     }
 }
