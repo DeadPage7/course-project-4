@@ -54,48 +54,46 @@ class AddressController extends Controller
     // Получение данных о конкретном адресе по его id
     public function show($id)
     {
-        try {
-            // Ищем адрес по id, если не найден - выбрасываем исключение
-            $address = Address::findOrFail($id);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            // Если адрес не найден, возвращаем ошибку с кодом 404
-            return response()->json(['error' => 'Адрес с таким идентификатором не найден.'], 404);
+        // Получаем ID текущего аутентифицированного пользователя
+        $client_id = auth()->user()->id;
+
+        // Ищем адрес, принадлежащий этому пользователю
+        $address = Address::where('id', $id)->where('client_id', $client_id)->first();
+
+        // Если адрес не найден или принадлежит другому пользователю — ошибка 404
+        if (!$address) {
+            return response()->json(['error' => 'Адрес не найден или у вас нет доступа.'], 404);
         }
 
-        // Возвращаем найденный адрес
         return response()->json($address);
     }
+
+
 
     // Обновление данных адреса
     public function update(Request $request, $id)
     {
-        // Валидация данных, переданных в запросе с кастомными сообщениями
+        // Валидация данных
         $request->validate([
-            'city' => 'required|string|max:255', // Город
-            'street' => 'required|string|max:255', // Улица
-            'house' => 'required|string|max:50', // Номер дома
-            'floor' => 'nullable|integer', // Этаж
-            'apartment_or_office' => 'nullable|string|max:50', // Квартира или офис
-            'entrance' => 'nullable|string|max:50', // Подъезд
-            'intercom' => 'nullable|string|max:50', // Домофон
-            'comment' => 'nullable|string', // Комментарий
-        ], [
-            'city.required' => 'Поле "Город" обязательно для обновления.',
-            'street.required' => 'Поле "Улица" обязательно для обновления.',
-            'house.required' => 'Поле "Номер дома" обязательно для обновления.',
-            'floor.integer' => 'Поле "Этаж" должно быть числом.',
-            'apartment_or_office.string' => 'Поле "Квартира или офис" должно быть строкой.',
-            'entrance.string' => 'Поле "Подъезд" должно быть строкой.',
-            'intercom.string' => 'Поле "Домофон" должно быть строкой.',
-            'comment.string' => 'Поле "Комментарий" должно быть строкой.',
+            'city' => 'required|string|max:255',
+            'street' => 'required|string|max:255',
+            'house' => 'required|string|max:50',
+            'floor' => 'nullable|integer',
+            'apartment_or_office' => 'nullable|string|max:50',
+            'entrance' => 'nullable|string|max:50',
+            'intercom' => 'nullable|string|max:50',
+            'comment' => 'nullable|string',
         ]);
 
-        try {
-            // Находим адрес по id, если не найден - выбрасываем исключение
-            $address = Address::findOrFail($id);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            // Если адрес не найден, возвращаем ошибку с кодом 404
-            return response()->json(['error' => 'Адрес с таким идентификатором не найден.'], 404);
+        // Получаем ID текущего пользователя
+        $client_id = auth()->user()->id;
+
+        // Ищем адрес и проверяем, что он принадлежит текущему пользователю
+        $address = Address::where('id', $id)->where('client_id', $client_id)->first();
+
+        // Если адрес не найден или принадлежит другому пользователю — возвращаем ошибку
+        if (!$address) {
+            return response()->json(['error' => 'Адрес не найден или у вас нет прав для его изменения.'], 403);
         }
 
         // Обновляем данные адреса
@@ -105,20 +103,26 @@ class AddressController extends Controller
         return response()->json($address);
     }
 
+
     // Удаление адреса по id
     public function destroy($id)
     {
-        try {
-            // Проверка существования адреса перед удалением
-            $address = Address::findOrFail($id);
-            // Удаление адреса
-            $address->delete();
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            // Если адрес не найден, возвращаем ошибку с кодом 404
-            return response()->json(['error' => 'Адрес с таким идентификатором не найден.'], 404);
+        // Получаем ID текущего пользователя
+        $client_id = auth()->user()->id;
+
+        // Ищем адрес, который принадлежит текущему пользователю
+        $address = Address::where('id', $id)->where('client_id', $client_id)->first();
+
+        // Если адрес не найден или принадлежит другому пользователю — возвращаем ошибку
+        if (!$address) {
+            return response()->json(['error' => 'Адрес не найден или у вас нет прав для его удаления.'], 403);
         }
 
-        // Возвращаем успешный ответ с кодом 204 (без содержимого)
-        return response()->json(null, 204);
+        // Удаляем адрес
+        $address->delete();
+
+        // Возвращаем успешный ответ
+        return response()->json(['message' => 'Адрес успешно удален.'], 200);
     }
+
 }

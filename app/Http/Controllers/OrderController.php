@@ -42,23 +42,28 @@ class OrderController extends Controller
     {
         $clientId = $request->user()->id;
 
-        // Получаем адрес доставк
-        $address = Address::where('client_id', $clientId)->latest('created_at')->first();
+        // Получаем address_id из запроса
+        $addressId = $request->input('address_id');
 
+        // Получаем адрес по переданному address_id и проверяем, что он принадлежит текущему пользователю
+        $address = Address::where('client_id', $clientId)->where('id', $addressId)->first();
+
+        // Если адрес не найден или не принадлежит текущему пользователю
         if (!$address) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Не удалось определить адрес доставки. Пожалуйста, добавьте адрес.'
-            ], 400);
+                'message' => 'Не удалось найти указанный адрес. Пожалуйста, выберите адрес, который вам принадлежит.',
+            ], 400); // Возвращаем статус 400 при ошибке
         }
 
         // Получаем товары из корзины
         $cartProducts = CartProduct::where('client_id', $clientId)->with('product')->get();
 
+        // Если корзина пуста
         if ($cartProducts->isEmpty()) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Корзина пуста. Добавьте товары для оформления заказа.'
+                'message' => 'Корзина пуста. Добавьте товары для оформления заказа.',
             ], 400);
         }
 
@@ -104,6 +109,7 @@ class OrderController extends Controller
             ], 500);
         }
     }
+
 
 
     // Получение данных о заказе

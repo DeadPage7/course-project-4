@@ -41,10 +41,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/orders', [OrderController::class, 'store']);          // Создание нового заказа
     Route::delete('/orders/{id}', [OrderController::class, 'destroy']); // Удаление заказа
     // Адреса
+    Route::get('/addresses', [AddressController::class, 'index']); // Получение списка адресов
     Route::post('/addresses', [AddressController::class, 'store']);  // Создание нового адреса
     Route::put('/addresses/{id}', [AddressController::class, 'update']); // Обновление адреса
     Route::delete('/addresses/{id}', [AddressController::class, 'destroy']); // Удаление адреса
-    Route::get('/addresses', [AddressController::class, 'index']); // Получение списка адресов
+    Route::get('/addresses/{id}', [AddressController::class, 'show']); //Просмотр адреса по айди
+
 
     // Позиции заказов (если нужно)
     Route::get('/order-items', [OrderItemController::class, 'index']);     // Все позиции заказов
