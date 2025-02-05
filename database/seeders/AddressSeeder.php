@@ -13,9 +13,8 @@ class AddressSeeder extends Seeder
         $client = Client::first(); // Получаем первого клиента для примера
 
         // Проверяем, если у клиента уже есть адрес, не создаем новый
-        if (!$client->addresses()->exists()) {
             Address::create([
-                'client_id' => $client->id,
+                'client_id' => 1,
                 'city' => 'Москва',
                 'street' => 'Тверская улица',
                 'house' => '12',
@@ -25,11 +24,10 @@ class AddressSeeder extends Seeder
                 'intercom' => '101',
                 'comment' => 'Оставить посылку с охранником',
             ]);
-        }
             Address::create([
-                'client_id' => 2,
-                'city' => 'Москва',
-                'street' => 'Тверская улица',
+                'client_id' => 1,
+                'city' => 'Томск',
+                'street' => 'Хорошая улица',
                 'house' => '12',
                 'floor' => 3,
                 'apartment_or_office' => 'Квартира 101',
@@ -37,5 +35,27 @@ class AddressSeeder extends Seeder
                 'intercom' => '101',
                 'comment' => 'Оставить посылку с охранником',
             ]);
+        Address::create([
+            'client_id' => 1,
+            'city' => 'Питер',
+            'street' => 'Плохая улица',
+            'house' => '12',
+            'floor' => 3,
+            'apartment_or_office' => 'Квартира 101',
+            'entrance' => 'Главный вход',
+            'intercom' => '101',
+            'comment' => 'Оставить посылку с охранником',
+        ]);
+        Address::create([
+            'client_id' => 1,
+            'city' => 'Москва',
+            'street' => 'Умная улица',
+            'house' => '12',
+            'floor' => 3,
+            'apartment_or_office' => 'Квартира 101',
+            'entrance' => 'Главный вход',
+            'intercom' => '101',
+            'comment' => 'Оставить посылку с охранником',
+        ]);
     }
 }

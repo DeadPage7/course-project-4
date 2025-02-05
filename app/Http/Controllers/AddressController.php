@@ -118,11 +118,12 @@ class AddressController extends Controller
             return response()->json(['error' => 'Адрес не найден или у вас нет прав для его удаления.'], 403);
         }
 
-        // Удаляем адрес
-        $address->delete();
+        // Отвязываем адрес от клиента (ставим client_id = NULL)
+        $address->update(['client_id' => null]);
 
         // Возвращаем успешный ответ
-        return response()->json(['message' => 'Адрес успешно удален.'], 200);
+        return response()->json(['message' => 'Адрес успешно отвязан от пользователя.'], 200);
     }
+
 
 }
